@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>許家沖繩之旅｜路線地圖＋景點資訊</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14293A;--sea:#0F4C6B;--line:#D3E3E7;--muted:#5D7585;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);display:flex;flex-direction:column;}
+header{
+  background:linear-gradient(120deg,#0A3550,#0F4C6B 55%,#156E8C);color:#fff;
+  padding:10px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;z-index:1000;
+}
+header h1{font-size:18px;font-weight:900;letter-spacing:.06em;}
+.tabs{margin-left:auto;display:flex;gap:6px;}
+.tab{
+  border:1.5px solid rgba(255,255,255,.5);background:transparent;color:#fff;
+  border-radius:999px;padding:5px 18px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:'Noto Sans TC',sans-serif;
+}
+.tab.on{background:#fff;color:var(--sea);border-color:#fff;}
+#map{flex:1;min-height:0;position:relative;}
+.daybar{
+  background:#fff;border-bottom:1px solid var(--line);padding:8px 12px;
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px;
+}
+.daybtn{
+  border:2px solid;border-radius:999px;padding:4px 14px;font-weight:700;font-size:13px;
+  cursor:pointer;background:#fff;font-family:'Noto Sans TC',sans-serif;transition:.15s;
+}
+.daybtn.off{opacity:.32;filter:grayscale(.6);}
+.linetype{margin-left:auto;font-size:12px;color:var(--muted);font-weight:500;display:flex;gap:14px;align-items:center;}
+.linetype .s{display:inline-block;width:30px;border-top:4px solid #5D7585;border-radius:2px;vertical-align:middle;margin-right:4px;}
+.linetype .d{display:inline-block;width:30px;border-top:4px dashed #5D7585;vertical-align:middle;margin-right:4px;}
+.num-icon{
+  display:flex;align-items:center;justify-content:center;
+  width:24px;height:24px;border-radius:50%;color:#fff;font-weight:900;font-size:12px;
+  border:2.5px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4);font-family:'Noto Sans TC',sans-serif;
+}
+.dur-chip{
+  background:#fff;border:2px solid;border-radius:999px;padding:1px 8px;
+  font-size:11px;font-weight:900;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.3);
+  font-family:'Noto Sans TC',sans-serif;display:inline-block;transform:translate(-50%,-50%);
+}
+.leaflet-popup-content{font-family:'Noto Sans TC',sans-serif;font-size:13px;line-height:1.5;margin:10px 14px;}
+.leaflet-popup-content b{font-size:14px;}
+.leaflet-popup-content .mode{font-size:12px;color:#5D7585;}
+footer{background:#fff;border-top:1px solid var(--line);padding:6px 14px;font-size:11px;color:var(--muted);text-align:center;}
+#loading{
+  position:absolute;left:10px;bottom:10px;z-index:900;display:flex;gap:8px;align-items:center;
+  background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:999px;
+  padding:6px 14px;font-weight:700;color:var(--sea);font-size:12.5px;
+  box-shadow:0 2px 10px rgba(0,0,0,.15);pointer-events:none;transition:opacity .4s;max-width:85%;
+}
+#loading .spin{width:16px;height:16px;border:3px solid #CFE4E8;border-top-color:var(--sea);border-radius:50%;animation:sp 1s linear infinite;flex:none;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ── 景點資訊頁 ── */
+#info{flex:1;min-height:0;overflow:auto;background:#F2F7F8;display:none;padding:16px 14px 40px;}
+#info .wrap{max-width:960px;margin:0 auto;}
+.iday{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px;}
+.iday h2{font-size:16px;font-weight:900;color:#fff;padding:9px 16px;}
+.itbl{width:100%;border-collapse:collapse;font-size:13px;}
+.itbl th{background:#F6FAFB;color:var(--muted);font-size:12px;font-weight:700;text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+.itbl td{padding:8px 12px;border-bottom:1px solid #EAF2F4;vertical-align:top;line-height:1.5;}
+.itbl tr:last-child td{border-bottom:none;}
+.itbl .nm{font-weight:700;white-space:nowrap;}
+.itbl .mc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--sea);white-space:nowrap;}
+.itbl .tel a{color:var(--ink);text-decoration:none;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.gbtn{
+  display:inline-block;background:#EAF6EE;color:#1E7A46;border:1px solid #BFE3CC;
+  border-radius:999px;padding:2px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;
+}
+.gbtn:hover{background:#DDF0E4;}
+.dim{color:#9AAEB8;}
+.infonote{font-size:12px;color:var(--muted);text-align:center;margin:4px 0 14px;line-height:1.6;}
+.iprint{
+  display:block;margin:0 auto 16px;background:var(--sea);color:#fff;border:none;border-radius:999px;
+  padding:9px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;
+}
+@media print{
+  header,.daybar,#map,footer,.iprint{display:none !important;}
+  #info{display:block !important;overflow:visible;background:#fff;padding:0;}
+  .iday{page-break-inside:avoid;border-radius:6px;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+}
+@media(max-width:640px){
+  header h1{font-size:15px;}
+  .linetype{display:none;}
+  .itbl th:nth-child(4),.itbl td:nth-child(4){display:none;} /* 手機隱藏地址欄 */
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺 許家沖繩之旅</h1>
+  <div class="tabs">
+    <button class="tab on" id="tabMap" onclick="showTab('map')">路線地圖</button>
+    <button class="tab" id="tabInfo" onclick="showTab('info')">景點資訊</button>
+  </div>
+</header>
+<div class="daybar" id="daybar">
+  <span style="font-weight:700;color:#5D7585">顯示：</span>
+  <div class="linetype">
+    <span><span class="s"></span>實線＝🚗 開車</span>
+    <span><span class="d"></span>長虛線＝🚕 Uber　點虛線＝🚝 電車</span>
+  </div>
+</div>
+<div id="map">
+  <div id="loading"><div class="spin"></div><div id="loadtext">地圖已可使用，正在載入道路細節…</div></div>
+</div>
+
+<div id="info">
+  <div class="wrap">
+    <button class="iprint" onclick="window.print()">🖨 列印景點資訊</button>
+    <div class="infonote">
+      Mapcode 可直接輸入日本車用導航；標「—」的店家可在導航輸入<b>電話號碼</b>或用 Google Maps 搜尋店名。<br>
+      電話與營業資訊可能異動，出發前建議再確認一次。
+    </div>
+    <div id="infolist"></div>
+  </div>
+</div>
+
+<footer>開車／Uber 路線由 OSRM 依實際道路即時計算；路段上的時間圓標為行程預估。實際導航以 Google Maps 為準｜底圖 © OpenStreetMap</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+function showTab(t){
+  document.getElementById('map').style.display = t==='map'?'block':'none';
+  document.getElementById('daybar').style.display = t==='map'?'flex':'none';
+  document.getElementById('info').style.display = t==='info'?'block':'none';
+  document.getElementById('tabMap').classList.toggle('on',t==='map');
+  document.getElementById('tabInfo').classList.toggle('on',t==='info');
+  if(t==='map' && window._map) setTimeout(()=>window._map.invalidateSize(),50);
+}
+
+const map = L.map('map').setView([26.42,127.80],10);
+window._map=map;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+
+/* ── 地點座標 ── */
+const P = {
+  airport:[26.2068,127.6520],  hotel:[26.2054,127.6787],
+  kokusai:[26.2146,127.6886],  maxvalu:[26.2166,127.6928],
+  ots:[26.1580,127.6550],
+  kouri:[26.7075,128.0176],    shrimp:[26.7024,128.0166],
+  churaumi:[26.6940,127.8779], kaichu:[26.3311,127.9266],
+  ufuya:[26.6140,127.9640],
+  naminoue:[26.2208,127.6669], depo:[26.2286,127.6946],
+  gyoshi:[26.2345,127.6885],   parco:[26.2582,127.6940],
+  araha:[26.3066,127.7565],    amevil:[26.3157,127.7561],
+  daruma:[26.2179,127.7115],   gyokusen:[26.1409,127.7487],
+  itoman:[26.1382,127.6613],   iias:[26.1587,127.6497],
+  outlet:[26.1615,127.6577],   senaga:[26.1795,127.6459],
+  oroku_st:[26.1966,127.6690], dmm:[26.1585,127.6493]
+};
+/* 單軌電車站點 */
+const ST = {
+  airport:[26.2068,127.6520], akamine:[26.1932,127.6636], oroku:[26.1966,127.6690],
+  onoyama:[26.2043,127.6738], tsubogawa:[26.2072,127.6788], asahibashi:[26.2119,127.6776],
+  kencho:[26.2131,127.6797], miebashi:[26.2174,127.6843], makishi:[26.2146,127.6926]
+};
+const RAIL_AIR_TSUBO=[ST.airport,ST.akamine,ST.oroku,ST.onoyama,ST.tsubogawa];
+const RAIL_TSUBO_MAKISHI=[ST.tsubogawa,ST.asahibashi,ST.kencho,ST.miebashi,ST.makishi];
+const RAIL_TSUBO_OROKU=[ST.tsubogawa,ST.onoyama,ST.oroku];
+
+const DAYS=[
+ {name:'Day 1（7/29）抵達・國際通',color:'#00838F',segs:[
+   {mode:'rail',pts:RAIL_AIR_TSUBO,est:13,label:'🚝 電車 機場→壺川'},
+   {mode:'rail',pts:RAIL_TSUBO_MAKISHI,est:8,label:'🚝 電車 壺川→牧志（或Uber 8分）'}
+ ],stops:[
+   {p:P.airport,n:'那霸機場',t:'16:00 抵達'},
+   {p:P.hotel,n:'美居飯店',t:'17:00 Check-in'},
+   {p:P.kokusai,n:'沖繩燒肉王・國際通',t:'18:00 晚餐＋逛街'}
+ ]},
+ {name:'Day 2（7/30）北部海線',color:'#1E88E5',segs:[
+   {mode:'uber',wp:[P.hotel,P.ots],est:20,label:'🚕 Uber 飯店→OTS'},
+   {mode:'car',wp:[P.ots,P.kouri],est:100,label:'🚗 OTS→古宇利島（高速）'},
+   {mode:'car',wp:[P.kouri,P.shrimp],est:5,label:'🚗 島上→蝦蝦飯'},
+   {mode:'car',wp:[P.shrimp,P.churaumi],est:35,label:'🚗 古宇利島→美麗海水族館'},
+   {mode:'car',wp:[P.churaumi,P.kaichu],est:80,label:'🚗 水族館→海中道路'},
+   {mode:'car',wp:[P.kaichu,P.ufuya],est:50,label:'🚗 海中道路→百年古家 大家'},
+   {mode:'car',wp:[P.ufuya,P.maxvalu,P.hotel],est:80,label:'🚗 名護→MaxValu牧志→飯店'}
+ ],stops:[
+   {p:P.ots,n:'OTS 取車',t:'08:00'},
+   {p:P.kouri,n:'古宇利島',t:'10:20 大橋・心形岩'},
+   {p:P.shrimp,n:'蝦蝦飯 Shrimp Wagon',t:'12:00 午餐'},
+   {p:P.churaumi,n:'美麗海水族館',t:'13:00（海豚秀15:00）'},
+   {p:P.kaichu,n:'海中道路',t:'16:00'},
+   {p:P.ufuya,n:'百年古家 大家（阿古豬）',t:'18:00 晚餐'},
+   {p:P.maxvalu,n:'MaxValu 牧志店',t:'20:30（退稅09–20時）'}
+ ]},
+ {name:'Day 3（7/31）那霸・中部',color:'#E53935',segs:[
+   {mode:'car',wp:[P.hotel,P.naminoue],est:10,label:'🚗 飯店→波上宮'},
+   {mode:'car',wp:[P.naminoue,P.depo],est:8,label:'🚗 波上宮→Sports Depo天久'},
+   {mode:'car',wp:[P.depo,P.gyoshi],est:5,label:'🚗 →漁師食堂 港町店'},
+   {mode:'car',wp:[P.gyoshi,P.parco],est:15,label:'🚗 →PARCO CITY'},
+   {mode:'car',wp:[P.parco,P.araha],est:20,label:'🚗 →安良波公園'},
+   {mode:'car',wp:[P.araha,P.amevil],est:5,label:'🚗 →美國村（壽司步行）'},
+   {mode:'car',wp:[P.amevil,P.hotel],est:40,label:'🚗 美國村→飯店'}
+ ],stops:[
+   {p:P.naminoue,n:'波上宮',t:'09:30'},
+   {p:P.depo,n:'Sports Depo 天久店',t:'10:00'},
+   {p:P.gyoshi,n:'漁師食堂 港町店',t:'12:00 午餐'},
+   {p:P.parco,n:'PARCO CITY',t:'13:30'},
+   {p:P.araha,n:'安良波公園',t:'15:30 玩水'},
+   {p:P.amevil,n:'美國村＋迴轉壽司',t:'16:30／18:30 晚餐'}
+ ]},
+ {name:'Day 4（8/1）南部・還車',color:'#43A047',segs:[
+   {mode:'car',wp:[P.hotel,P.daruma],est:15,label:'🚗 飯店→達摩寺'},
+   {mode:'car',wp:[P.daruma,P.gyokusen],est:30,label:'🚗 →玉泉洞'},
+   {mode:'car',wp:[P.gyokusen,P.itoman],est:25,label:'🚗 →糸滿漁港'},
+   {mode:'car',wp:[P.itoman,P.iias],est:10,label:'🚗 →iias豐崎'},
+   {mode:'car',wp:[P.iias,P.outlet],est:10,label:'🚗 →Outlet ASHIBINAA'},
+   {mode:'car',wp:[P.outlet,P.senaga],est:10,label:'🚗 →瀨長島'},
+   {mode:'car',wp:[P.senaga,P.ots],est:5,label:'🚗 →OTS還車'},
+   {mode:'uber',wp:[P.ots,P.hotel],est:20,label:'🚕 Uber OTS→飯店'},
+   {mode:'rail',pts:RAIL_TSUBO_OROKU,est:6,label:'🚝 電車 壺川→小祿（通堂拉麵）'}
+ ],stops:[
+   {p:P.daruma,n:'達摩寺',t:'09:30'},
+   {p:P.gyokusen,n:'玉泉洞（沖繩世界）',t:'10:30'},
+   {p:P.itoman,n:'糸滿漁港 お魚センター',t:'12:00 午餐'},
+   {p:P.iias,n:'iias 沖繩豐崎',t:'13:00'},
+   {p:P.outlet,n:'Outlet ASHIBINAA',t:'14:30'},
+   {p:P.senaga,n:'瀨長島',t:'16:30'},
+   {p:P.ots,n:'OTS 還車',t:'17:45'},
+   {p:P.oroku_st,n:'通堂拉麵（小祿）',t:'19:00 晚餐'}
+ ]},
+ {name:'Day 5（8/2）DMM・返程',color:'#8E24AA',segs:[
+   {mode:'uber',wp:[P.hotel,P.dmm],est:20,label:'🚕 Uber 飯店→DMM水族館'},
+   {mode:'uber',wp:[P.dmm,P.hotel],est:20,label:'🚕 Uber 回飯店拿行李'},
+   {mode:'rail',pts:[...RAIL_AIR_TSUBO].reverse(),est:13,label:'🚝 電車 壺川→機場（或Uber 12分）'}
+ ],stops:[
+   {p:P.dmm,n:'DMM Kariyushi 水族館',t:'09:30（午餐 iias／DMM）'},
+   {p:P.airport,n:'那霸機場',t:'16:55 起飛 ✈'}
+ ]}
+];
+
+/* ── 景點資訊（Mapcode／電話／地址） ── */
+function g(q){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);}
+const INFO=[
+ {items:[
+  {n:'那霸機場',mc:'—',tel:'—',addr:'那覇市鏡水150',q:'那覇空港'},
+  {n:'美居飯店 Mercure Okinawa Naha',mc:'33 126 200*66',tel:'098-855-7111',addr:'那覇市壺川3-3-19',q:'メルキュールホテル沖縄那覇'},
+  {n:'沖繩燒肉王（國際通）',mc:'—',tel:'依預訂店家',addr:'國際通周邊',q:'沖縄 焼肉 国際通り'},
+  {n:'國際通（むつみ橋口）',mc:'33 157 444*60',tel:'—',addr:'那覇市牧志',q:'国際通り 那覇'}
+ ]},
+ {items:[
+  {n:'OTS 臨空豐崎營業所',mc:'232 543 324*33（道の駅豊崎旁）',tel:'098-856-8877',addr:'豊見城市豊崎3-37',q:'OTSレンタカー 臨空豊崎営業所'},
+  {n:'古宇利大橋（南端展望）',mc:'485 631 329*31',tel:'—',addr:'今帰仁村古宇利',q:'古宇利大橋'},
+  {n:'蝦蝦飯 Shrimp Wagon',mc:'—',tel:'—（島上另有 KOURI SHRIMP 0980-56-1242）',addr:'今帰仁村古宇利（島上）',q:'Shrimp Wagon 古宇利島'},
+  {n:'沖繩美麗海水族館',mc:'553 075 797',tel:'0980-48-2741',addr:'本部町石川424（海洋博公園內）',q:'沖縄美ら海水族館'},
+  {n:'海中道路（海の駅あやはし館）',mc:'499 576 410*07',tel:'—',addr:'うるま市与那城屋平',q:'海の駅あやはし館'},
+  {n:'百年古家 大家（うふやー）',mc:'—（導航輸入電話）',tel:'0980-53-0280',addr:'名護市中山90',q:'百年古家 大家 名護'},
+  {n:'MaxValu 牧志店（24hr）',mc:'—',tel:'—',addr:'那覇市牧志（國際通尾端）',q:'マックスバリュ牧志店'}
+ ]},
+ {items:[
+  {n:'波上宮',mc:'33 185 056*22（波之上海灘）',tel:'098-868-3697',addr:'那覇市若狭1-25-11',q:'波上宮'},
+  {n:'Sports Depo 天久店',mc:'—',tel:'—',addr:'那覇市天久（新都心）',q:'スポーツデポ 那覇天久店'},
+  {n:'漁師食堂 港町店',mc:'—',tel:'—',addr:'那覇市港町',q:'漁師食堂 港町 那覇'},
+  {n:'PARCO CITY（サンエー浦添西海岸）',mc:'—',tel:'098-871-1120',addr:'浦添市西洲3-1-1',q:'サンエー浦添西海岸パルコシティ'},
+  {n:'安良波公園（Araha Beach）',mc:'33 496 188*53',tel:'—',addr:'北谷町北谷2-21',q:'安良波公園'},
+  {n:'美濱美國村',mc:'33 526 452*52',tel:'—',addr:'北谷町美浜',q:'美浜アメリカンビレッジ'},
+  {n:'迴轉壽司（美國村周邊）',mc:'—',tel:'依現場選擇',addr:'美國村周邊',q:'回転寿司 美浜 北谷'}
+ ]},
+ {items:[
+  {n:'達摩寺（西來院）',mc:'—',tel:'—',addr:'那覇市首里赤田町',q:'達磨寺 西来院 首里'},
+  {n:'玉泉洞（沖繩世界）',mc:'232 495 330*28',tel:'098-949-7421',addr:'南城市玉城前川1336',q:'おきなわワールド 玉泉洞'},
+  {n:'糸滿漁港 お魚センター',mc:'232 484 107*03（道の駅いとまん）',tel:'098-992-2803',addr:'糸満市西崎町4-19',q:'糸満漁業協同組合お魚センター'},
+  {n:'iias 沖繩豐崎',mc:'—',tel:'—',addr:'豊見城市豊崎3-35',q:'イーアス沖縄豊崎'},
+  {n:'Outlet ASHIBINAA',mc:'232 544 451*04',tel:'098-891-6000',addr:'豊見城市豊崎1-188',q:'沖縄アウトレットモールあしびなー'},
+  {n:'瀨長島 Umikaji Terrace',mc:'33 002 470*30',tel:'—',addr:'豊見城市瀬長174-6',q:'瀬長島ウミカジテラス'},
+  {n:'通堂拉麵 小祿本店',mc:'—（導航輸入電話）',tel:'098-857-5577',addr:'那覇市金城5-4-6',q:'琉球新麺 通堂 小禄本店'}
+ ]},
+ {items:[
+  {n:'DMM Kariyushi 水族館',mc:'—（iias 同棟）',tel:'—',addr:'豊見城市豊崎3-35',q:'DMMかりゆし水族館'},
+  {n:'那霸機場（回程）',mc:'—',tel:'—',addr:'那覇市鏡水150',q:'那覇空港 国際線'}
+ ]}
+];
+
+/* 產生景點資訊頁 */
+const infolist=document.getElementById('infolist');
+DAYS.forEach((day,di)=>{
+  const rows=INFO[di].items.map(it=>
+    '<tr><td class="nm">'+it.n+'</td>'+
+    '<td class="mc">'+(it.mc==='—'?'<span class="dim">—</span>':it.mc)+'</td>'+
+    '<td class="tel">'+(/^0\d/.test(it.tel)?'<a href="tel:'+it.tel.replace(/-/g,'')+'">'+it.tel+'</a>':'<span class="dim">'+it.tel+'</span>')+'</td>'+
+    '<td>'+it.addr+'</td>'+
+    '<td><a class="gbtn" href="'+g(it.q)+'" target="_blank">📍 Google 地圖</a></td></tr>'
+  ).join('');
+  infolist.insertAdjacentHTML('beforeend',
+    '<div class="iday"><h2 style="background:'+day.color+'">'+day.name+'</h2>'+
+    '<table class="itbl"><tr><th>地點</th><th>Mapcode</th><th>電話</th><th>地址</th><th>導航</th></tr>'+rows+'</table></div>');
+});
+
+/* ── OSRM 實際道路 ── */
+async function osrmRoute(wp){
+  const coords=wp.map(p=>p[1]+','+p[0]).join(';');
+  const url='https://router.project-osrm.org/route/v1/driving/'+coords+'?overview=full&geometries=geojson';
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),8000); /* 8秒逾時，不讓單一請求卡死頁面 */
+  try{
+    const res=await fetch(url,{signal:ctrl.signal});
+    if(!res.ok) throw new Error('http');
+    const j=await res.json();
+    if(j.code!=='Ok'||!j.routes||!j.routes[0]) throw new Error('no route');
+    return {latlngs:j.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]),mins:Math.round(j.routes[0].duration/60)};
+  }finally{clearTimeout(timer);}
+}
+
+const bar=document.getElementById('daybar');
+const legendRef=bar.querySelector('.linetype');
+const loadEl=document.getElementById('loading');
+const loadText=document.getElementById('loadtext');
+const groups=[];
+let fallbackUsed=false;
+
+function modeEmoji(m){return m==='car'?'🚗':(m==='uber'?'🚕':'🚝');}
+
+function drawSeg(g,day,seg,latlngs,mins,approx){
+  const style={color:day.color,weight:5,opacity:.85};
+  if(seg.mode==='rail'){style.dashArray='2 8';style.weight=4;}
+  if(seg.mode==='uber'){style.dashArray='12 9';style.weight=4.5;}
+  if(approx&&seg.mode==='car'){style.dashArray='4 6';style.opacity=.7;} /* 示意線先用短虛線 */
+  const pl=L.polyline(latlngs,style);
+  pl.bindPopup('<b style="color:'+day.color+'">'+day.name+'</b><br><span class="mode">'+seg.label+'　約 '+mins+' 分'+(approx?'<br>（示意路線，道路細節載入中或無網路）':'')+'</span>');
+  pl.addTo(g);
+  /* 路段中點的時間圓標 */
+  const mid=latlngs[Math.floor(latlngs.length/2)];
+  const chip=L.divIcon({className:'',iconSize:[0,0],
+    html:'<span class="dur-chip" style="border-color:'+day.color+';color:'+day.color+'">'+modeEmoji(seg.mode)+' '+mins+'分</span>'});
+  const mk=L.marker(mid,{icon:chip,interactive:false,keyboard:false}).addTo(g);
+  return {pl,mk};
+}
+
+async function build(){
+  DAYS.forEach(day=>{
+    const g=L.layerGroup().addTo(map);
+    groups.push(g);
+    day.segs.filter(s=>s.mode==='rail').forEach(seg=>drawSeg(g,day,seg,seg.pts,seg.est,false));
+    day.stops.forEach((s,si)=>{
+      const icon=L.divIcon({className:'',html:'<div class="num-icon" style="background:'+day.color+'">'+(si+1)+'</div>',iconSize:[24,24],iconAnchor:[12,12]});
+      L.marker(s.p,{icon}).bindPopup('<b>'+s.n+'</b><br><span class="mode">'+day.name+'<br>'+s.t+'</span>').addTo(g);
+    });
+    const btn=document.createElement('button');
+    btn.className='daybtn';
+    btn.style.borderColor=day.color;btn.style.color=day.color;
+    btn.textContent=day.name.split('）')[0]+'）';
+    btn.onclick=()=>{
+      if(map.hasLayer(g)){map.removeLayer(g);btn.classList.add('off');}
+      else{g.addTo(map);btn.classList.remove('off');}
+    };
+    bar.insertBefore(btn,legendRef);
+  });
+
+  const hotelIcon=L.divIcon({className:'',html:'<div class="num-icon" style="background:#14293A;width:28px;height:28px;font-size:14px">🏨</div>',iconSize:[28,28],iconAnchor:[14,14]});
+  L.marker(P.hotel,{icon:hotelIcon}).bindPopup('<b>那霸美居飯店</b><br><span class="mode">壺川站旁・4晚住宿</span>').addTo(map);
+  map.fitBounds(L.latLngBounds([[26.10,127.60],[26.75,128.06]]),{padding:[20,20]});
+
+  /* 1) 先立即畫出所有開車/Uber 的示意路線 → 地圖馬上就能看、能用 */
+  const jobs=[];
+  DAYS.forEach((day,di)=>day.segs.forEach(seg=>{
+    if(seg.mode!=='rail'){
+      const drawn=drawSeg(groups[di],day,seg,seg.wp,seg.est,true);
+      jobs.push({day,di,seg,drawn});
+    }
+  }));
+
+  /* 2) 背景並列向 OSRM 要實際道路，成功一段就替換一段（每段最多等8秒） */
+  let done=0,ok=0;
+  const upgrade=async job=>{
+    try{
+      const r=await osrmRoute(job.seg.wp);
+      groups[job.di].removeLayer(job.drawn.pl);
+      groups[job.di].removeLayer(job.drawn.mk);
+      drawSeg(groups[job.di],job.day,job.seg,r.latlngs,r.mins||job.seg.est,false);
+      ok++;
+    }catch(e){fallbackUsed=true;}
+    done++;
+    loadText.textContent='載入道路細節… '+done+'/'+jobs.length;
+  };
+  /* 每批4段並列，避免手機瀏覽器連線數限制 */
+  for(let i=0;i<jobs.length;i+=4){
+    await Promise.allSettled(jobs.slice(i,i+4).map(upgrade));
+  }
+  loadText.textContent = ok===jobs.length ? '✓ 已載入實際道路路線'
+    : (ok>0 ? '✓ 部分路段已載入實際道路（其餘為示意線）'
+            : '⚠ 無法連線路徑服務，以示意線顯示（不影響瀏覽）');
+  setTimeout(()=>{loadEl.style.opacity='0';setTimeout(()=>loadEl.remove(),500);},3500);
+}
+build();
+</script>
+</body>
+</html>
