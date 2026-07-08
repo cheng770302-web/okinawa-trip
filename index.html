@@ -64,13 +64,15 @@ footer{background:#fff;border-top:1px solid var(--line);padding:6px 14px;font-si
 #info .wrap{max-width:960px;margin:0 auto;}
 .iday{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-bottom:16px;}
 .iday h2{font-size:16px;font-weight:900;color:#fff;padding:9px 16px;}
-.itbl{width:100%;border-collapse:collapse;font-size:13px;}
-.itbl th{background:#F6FAFB;color:var(--muted);font-size:12px;font-weight:700;text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
-.itbl td{padding:8px 12px;border-bottom:1px solid #EAF2F4;vertical-align:top;line-height:1.5;}
-.itbl tr:last-child td{border-bottom:none;}
-.itbl .nm{font-weight:700;white-space:nowrap;}
-.itbl .mc{font-variant-numeric:tabular-nums;font-weight:700;color:var(--sea);white-space:nowrap;}
-.itbl .tel a{color:var(--ink);text-decoration:none;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.icards{display:grid;grid-template-columns:1fr;gap:10px;padding:12px;}
+@media(min-width:720px){.icards{grid-template-columns:1fr 1fr;}}
+.icard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#FBFDFE;}
+.icard .inm{font-weight:900;font-size:14.5px;margin-bottom:7px;}
+.irow{display:flex;gap:10px;font-size:13px;line-height:1.55;padding:2px 0;}
+.irow>span{flex:none;width:58px;color:var(--muted);font-size:12px;font-weight:700;padding-top:1px;}
+.irow b{color:var(--sea);font-weight:700;font-variant-numeric:tabular-nums;word-break:break-all;}
+.irow a{color:var(--ink);text-decoration:none;font-variant-numeric:tabular-nums;}
+.icard .gbtn{margin-top:8px;}
 .gbtn{
   display:inline-block;background:#EAF6EE;color:#1E7A46;border:1px solid #BFE3CC;
   border-radius:999px;padding:2px 12px;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;
@@ -91,7 +93,6 @@ footer{background:#fff;border-top:1px solid var(--line);padding:6px 14px;font-si
 @media(max-width:640px){
   header h1{font-size:15px;}
   .linetype{display:none;}
-  .itbl th:nth-child(4),.itbl td:nth-child(4){display:none;} /* 手機隱藏地址欄 */
 }
 </style>
 </head>
@@ -151,6 +152,7 @@ const P = {
   churaumi:[26.6940,127.8779], kaichu:[26.3311,127.9266],
   ufuya:[26.6140,127.9640],
   naminoue:[26.2208,127.6669], depo:[26.2286,127.6946],
+  busena:[26.5535,127.9435],
   gyoshi:[26.2345,127.6885],   parco:[26.2582,127.6940],
   araha:[26.3066,127.7565],    amevil:[26.3157,127.7561],
   daruma:[26.2179,127.7115],   gyokusen:[26.1409,127.7487],
@@ -177,20 +179,22 @@ const DAYS=[
    {p:P.hotel,n:'美居飯店',t:'17:00 Check-in'},
    {p:P.kokusai,n:'沖繩燒肉王・國際通',t:'18:00 晚餐＋逛街'}
  ]},
- {name:'Day 2（7/30）北部海線',color:'#1E88E5',segs:[
-   {mode:'uber',wp:[P.hotel,P.ots],est:20,label:'🚕 Uber 飯店→OTS'},
-   {mode:'car',wp:[P.ots,P.kouri],est:100,label:'🚗 OTS→古宇利島（高速）'},
+ {name:'Day 2（7/30）北部一日遊',color:'#1E88E5',segs:[
+   {mode:'uber',wp:[P.hotel,P.ots],est:10,label:'🚕 Uber 飯店→OTS'},
+   {mode:'car',wp:[P.ots,P.busena],est:60,label:'🚗 OTS→部瀨名海中公園（高速）'},
+   {mode:'car',wp:[P.busena,P.kouri],est:50,label:'🚗 部瀨名→古宇利島'},
    {mode:'car',wp:[P.kouri,P.shrimp],est:5,label:'🚗 島上→蝦蝦飯'},
-   {mode:'car',wp:[P.shrimp,P.churaumi],est:35,label:'🚗 古宇利島→美麗海水族館'},
-   {mode:'car',wp:[P.churaumi,P.ufuya],est:50,label:'🚗 美麗海水族館→百年古家 大家（名護）'},
+   {mode:'car',wp:[P.shrimp,P.churaumi],est:40,label:'🚗 古宇利島→沖繩美麗海水族館'},
+   {mode:'car',wp:[P.churaumi,P.ufuya],est:30,label:'🚗 水族館→百年古家 大家'},
    {mode:'car',wp:[P.ufuya,P.maxvalu,P.hotel],est:80,label:'🚗 名護→MaxValu牧志→飯店'}
  ],stops:[
-   {p:P.ots,n:'OTS 取車',t:'08:00'},
-   {p:P.kouri,n:'古宇利島',t:'10:20 大橋・心形岩'},
-   {p:P.shrimp,n:'蝦蝦飯 Shrimp Wagon',t:'12:00 午餐'},
-   {p:P.churaumi,n:'美麗海水族館',t:'13:00（海豚秀15:00）'},
-   {p:P.ufuya,n:'百年古家 大家（阿古豬）',t:'晚餐（可提前至17:00）'},
-   {p:P.maxvalu,n:'MaxValu 牧志店',t:'20:30（退稅09–20時）'}
+   {p:P.ots,n:'OTS 取車',t:'08:00 取車出發'},
+   {p:P.busena,n:'部瀨名海中公園',t:'09:00–10:00 展望塔＋玻璃船'},
+   {p:P.kouri,n:'古宇利島',t:'11:00–13:00 大橋・心形岩'},
+   {p:P.shrimp,n:'蝦蝦飯 Shrimp Wagon',t:'午餐（島上，11:00–13:00 內）'},
+   {p:P.churaumi,n:'沖繩美麗海水族館',t:'13:40–16:30（海豚秀 15:00）'},
+   {p:P.ufuya,n:'百年古家 大家（阿古豬）',t:'17:00–18:30 晚餐'},
+   {p:P.maxvalu,n:'MaxValu 牧志店（24hr）',t:'約20:00（退稅至20:00）'}
  ]},
  {name:'Day 3（7/31）那霸・中部',color:'#E53935',segs:[
    {mode:'car',wp:[P.hotel,P.naminoue],est:10,label:'🚗 飯店→波上宮'},
@@ -201,12 +205,13 @@ const DAYS=[
    {mode:'car',wp:[P.araha,P.amevil],est:5,label:'🚗 →美國村（壽司步行）'},
    {mode:'car',wp:[P.amevil,P.hotel],est:40,label:'🚗 美國村→飯店'}
  ],stops:[
-   {p:P.naminoue,n:'波上宮',t:'09:30'},
-   {p:P.depo,n:'Sports Depo 天久店',t:'10:00'},
-   {p:P.gyoshi,n:'漁師食堂 港町店',t:'12:00 午餐'},
-   {p:P.parco,n:'PARCO CITY',t:'13:30'},
-   {p:P.araha,n:'安良波公園',t:'15:30 玩水'},
-   {p:P.amevil,n:'美國村＋迴轉壽司',t:'16:30／18:30 晚餐'}
+   {p:P.naminoue,n:'波上宮',t:'09:15–10:00'},
+   {p:P.depo,n:'Sports Depo 天久店',t:'10:15–11:30'},
+   {p:P.gyoshi,n:'漁師食堂 港町店',t:'11:40–13:30 午餐'},
+   {p:P.parco,n:'PARCO CITY',t:'13:40–15:00'},
+   {p:P.araha,n:'安良波公園',t:'15:20–16:30 玩水'},
+   {p:P.amevil,n:'美國村＋迴轉壽司',t:'16:35–18:30／晚餐18:30–20:00'},
+   {p:P.kokusai,n:'國際通／唐吉軻德・MaxValu',t:'20:30 飯後自由逛（退稅至20:00）'}
  ]},
  {name:'Day 4（8/1）南部・還車',color:'#43A047',segs:[
    {mode:'car',wp:[P.hotel,P.daruma],est:15,label:'🚗 飯店→達摩寺'},
@@ -219,21 +224,22 @@ const DAYS=[
    {mode:'uber',wp:[P.ots,P.hotel],est:20,label:'🚕 Uber OTS→飯店'},
    {mode:'rail',pts:RAIL_TSUBO_OROKU,est:6,label:'🚝 電車 壺川→小祿（通堂拉麵）'}
  ],stops:[
-   {p:P.daruma,n:'達摩寺',t:'09:30'},
-   {p:P.gyokusen,n:'玉泉洞（沖繩世界）',t:'10:30'},
-   {p:P.itoman,n:'糸滿漁港 お魚センター',t:'12:00 午餐'},
-   {p:P.iias,n:'iias 沖繩豐崎',t:'13:00'},
-   {p:P.outlet,n:'Outlet ASHIBINAA',t:'14:30'},
-   {p:P.senaga,n:'瀨長島',t:'16:30'},
-   {p:P.ots,n:'OTS 還車',t:'17:45'},
-   {p:P.oroku_st,n:'通堂拉麵（小祿）',t:'19:00 晚餐'}
+   {p:P.daruma,n:'達摩寺',t:'09:20–10:00'},
+   {p:P.gyokusen,n:'玉泉洞（沖繩世界）',t:'10:30–12:00 洞穴探險'},
+   {p:P.itoman,n:'糸滿漁港 お魚センター',t:'12:20–13:30 午餐（備案：糸滿漁民食堂）'},
+   {p:P.iias,n:'iias 沖繩豐崎',t:'13:40–15:30'},
+   {p:P.outlet,n:'Outlet ASHIBINAA',t:'15:35–17:00'},
+   {p:P.senaga,n:'瀨長島',t:'17:10–18:00'},
+   {p:P.ots,n:'OTS 還車',t:'18:10（營業至20:00）'},
+   {p:P.oroku_st,n:'通堂拉麵（小祿）',t:'約19:15 晚餐'}
  ]},
  {name:'Day 5（8/2）DMM・返程',color:'#8E24AA',segs:[
-   {mode:'uber',wp:[P.hotel,P.dmm],est:20,label:'🚕 Uber 飯店→DMM水族館'},
-   {mode:'uber',wp:[P.dmm,P.hotel],est:20,label:'🚕 Uber 回飯店拿行李'},
-   {mode:'rail',pts:[...RAIL_AIR_TSUBO].reverse(),est:13,label:'🚝 電車 壺川→機場（或Uber 12分）'}
+   {mode:'uber',wp:[P.hotel,P.dmm],est:15,label:'🚕 Uber 飯店→DMM水族館'},
+   {mode:'uber',wp:[P.dmm,P.hotel],est:15,label:'🚕 Uber 回飯店拿行李'},
+   {mode:'rail',pts:[...RAIL_AIR_TSUBO].reverse(),est:15,label:'🚝 電車 壺川→機場（約15分）'}
  ],stops:[
-   {p:P.dmm,n:'DMM Kariyushi 水族館',t:'09:30（午餐 iias／DMM）'},
+   {p:P.dmm,n:'DMM Kariyushi 水族館',t:'09:30 入館（午餐 iias／DMM 步行即達）'},
+   {p:P.hotel,n:'回飯店拿行李',t:'14:00（14:30 前往機場）'},
    {p:P.airport,n:'那霸機場',t:'16:55 起飛 ✈'}
  ]}
 ];
@@ -249,6 +255,7 @@ const INFO=[
  ]},
  {items:[
   {n:'OTS 臨空豐崎營業所',mc:'232 543 324*33（道の駅豊崎旁）',tel:'098-856-8877',addr:'豊見城市豊崎3-37',q:'OTSレンタカー 臨空豊崎営業所'},
+  {n:'部瀨名海中公園（海中展望塔・玻璃船）',mc:'206 442 075*11',tel:'0980-52-3379',addr:'名護市喜瀬1744-1（許田IC旁）｜套票 大人2100円・4歲–國中1050円',q:'ブセナ海中公園'},
   {n:'古宇利大橋（南端展望）',mc:'485 631 329*31',tel:'—',addr:'今帰仁村古宇利',q:'古宇利大橋'},
   {n:'蝦蝦飯 Shrimp Wagon',mc:'—',tel:'—（島上另有 KOURI SHRIMP 0980-56-1242）',addr:'今帰仁村古宇利（島上）',q:'Shrimp Wagon 古宇利島'},
   {n:'沖繩美麗海水族館',mc:'553 075 797',tel:'0980-48-2741',addr:'本部町石川424（海洋博公園內）',q:'沖縄美ら海水族館'},
@@ -262,7 +269,8 @@ const INFO=[
   {n:'PARCO CITY（サンエー浦添西海岸）',mc:'—',tel:'098-871-1120',addr:'浦添市西洲3-1-1',q:'サンエー浦添西海岸パルコシティ'},
   {n:'安良波公園（Araha Beach）',mc:'33 496 188*53',tel:'—',addr:'北谷町北谷2-21',q:'安良波公園'},
   {n:'美濱美國村',mc:'33 526 452*52',tel:'—',addr:'北谷町美浜',q:'美浜アメリカンビレッジ'},
-  {n:'迴轉壽司（美國村周邊）',mc:'—',tel:'依現場選擇',addr:'美國村周邊',q:'回転寿司 美浜 北谷'}
+  {n:'迴轉壽司（美國村周邊）',mc:'—',tel:'依現場選擇',addr:'美國村周邊',q:'回転寿司 美浜 北谷'},
+  {n:'唐吉軻德 國際通店（24hr）',mc:'—',tel:'—',addr:'那覇市松尾2-8-19（國際通上）',q:'ドン・キホーテ国際通り店'}
  ]},
  {items:[
   {n:'達摩寺（西來院）',mc:'—',tel:'—',addr:'那覇市首里赤田町',q:'達磨寺 西来院 首里'},
@@ -282,16 +290,16 @@ const INFO=[
 /* 產生景點資訊頁 */
 const infolist=document.getElementById('infolist');
 DAYS.forEach((day,di)=>{
-  const rows=INFO[di].items.map(it=>
-    '<tr><td class="nm">'+it.n+'</td>'+
-    '<td class="mc">'+(it.mc==='—'?'<span class="dim">—</span>':it.mc)+'</td>'+
-    '<td class="tel">'+(/^0\d/.test(it.tel)?'<a href="tel:'+it.tel.replace(/-/g,'')+'">'+it.tel+'</a>':'<span class="dim">'+it.tel+'</span>')+'</td>'+
-    '<td>'+it.addr+'</td>'+
-    '<td><a class="gbtn" href="'+g(it.q)+'" target="_blank">📍 Google 地圖</a></td></tr>'
+  const cards=INFO[di].items.map(it=>
+    '<div class="icard"><div class="inm">'+it.n+'</div>'+
+    '<div class="irow"><span>Mapcode</span>'+(it.mc==='—'?'<span class="dim">—</span>':'<b>'+it.mc+'</b>')+'</div>'+
+    '<div class="irow"><span>電話</span>'+(/^0\d/.test(it.tel)?'<a href="tel:'+it.tel.replace(/-/g,'')+'">'+it.tel+'</a>':'<span class="dim">'+it.tel+'</span>')+'</div>'+
+    '<div class="irow"><span>地址</span><div>'+it.addr+'</div></div>'+
+    '<a class="gbtn" href="'+g(it.q)+'" target="_blank">📍 Google 地圖導航</a></div>'
   ).join('');
   infolist.insertAdjacentHTML('beforeend',
     '<div class="iday"><h2 style="background:'+day.color+'">'+day.name+'</h2>'+
-    '<table class="itbl"><tr><th>地點</th><th>Mapcode</th><th>電話</th><th>地址</th><th>導航</th></tr>'+rows+'</table></div>');
+    '<div class="icards">'+cards+'</div></div>');
 });
 
 /* ── OSRM 實際道路 ── */
